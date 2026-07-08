@@ -1,0 +1,16 @@
+{
+  "enabledProviders": [
+    "ollama-local"
+  ],
+  "env": {
+    "GEMINI_API_KEY": "",
+    "GROQ_API_KEY": "",
+    "CLOUDFLARE_API_TOKEN": "",
+    "CLOUDFLARE_ACCOUNT_ID": "",
+    "OPENROUTER_API_KEY": ""
+  },
+  "limits": {
+    "monthlyBudgetEur": 0,
+    "allowPaidFallback": false
+  }
+}
