@@ -1,0 +1,15 @@
+# local secrets/config
+config/providers.local.json
+.env
+.env.*
+*.local
+
+# system/editor
+.DS_Store
+.idea/
+.vscode/
+
+# dependencies/build outputs
+node_modules/
+dist/
+build/
