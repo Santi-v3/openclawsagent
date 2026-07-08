@@ -1,0 +1,13 @@
+{
+  "name": "sagent-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo:providers": "tsx src/demo/provider-selection-demo.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0"
+  }
+}
