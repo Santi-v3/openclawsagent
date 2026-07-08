@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "demo:providers": "tsx src/demo/provider-selection-demo.ts"
+    "demo:providers": "tsx src/demo/provider-selection-demo.ts",
+    "demo:load-config": "tsx src/demo/load-provider-config-demo.ts"
   },
   "devDependencies": {
     "tsx": "^4.20.0",
