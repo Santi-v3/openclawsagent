@@ -6,6 +6,13 @@ import type {
   ProviderSelection,
 } from "./types";
 
+const DEFAULT_FALLBACK_ROLES: ModelRole[] = [
+  "general",
+  "chat",
+  "planning",
+  "local-fallback",
+];
+
 export function findProviderById(
   config: ProviderRegistryConfig,
   providerId: string
@@ -31,20 +38,48 @@ export function selectProviderForTask(
   const preferredRoles = rule?.preferredRoles ?? ["general"];
   const fallbackOrder = config.routing.fallbackOrder;
 
-  for (const providerId of fallbackOrder) {
+  const primarySelection = selectFromProviders(
+    config,
+    fallbackOrder,
+    preferredRoles,
+    taskType,
+    "preferred roles"
+  );
+
+  if (primarySelection) {
+    return primarySelection;
+  }
+
+  return selectFromProviders(
+    config,
+    fallbackOrder,
+    DEFAULT_FALLBACK_ROLES,
+    taskType,
+    "default fallback roles"
+  );
+}
+
+function selectFromProviders(
+  config: ProviderRegistryConfig,
+  providerIds: string[],
+  roles: ModelRole[],
+  taskType: string,
+  strategy: string
+): ProviderSelection | null {
+  for (const providerId of providerIds) {
     const provider = findProviderById(config, providerId);
 
     if (!provider || !provider.enabled) {
       continue;
     }
 
-    const matchingModels = findModelsByRole(provider, preferredRoles);
+    const matchingModels = findModelsByRole(provider, roles);
 
     if (matchingModels.length > 0) {
       return {
         provider,
         model: matchingModels[0],
-        reason: `Selected ${provider.id}/${matchingModels[0].id} for task type "${taskType}" using roles: ${preferredRoles.join(
+        reason: `Selected ${provider.id}/${matchingModels[0].id} for task type "${taskType}" using ${strategy}: ${roles.join(
           ", "
         )}`,
       };
