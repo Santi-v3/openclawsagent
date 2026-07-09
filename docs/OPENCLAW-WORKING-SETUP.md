@@ -63,3 +63,21 @@ Result:
 Conclusion:
 
 OpenClaw can read and summarize files inside the sandbox workspace while using openrouter/auto.
+
+## Confirmed sandbox write test
+
+Prompt in OpenClaw chat:
+
+Erstelle im Ordner sagent-test eine Datei write-test.md mit einer kurzen Checkliste für sichere OpenClaw-Nutzung. Nutze nur diesen Ordner und ändere keine anderen Dateien.
+
+Created file:
+
+~/.openclaw/workspace/sagent-test/write-test.md
+
+Result:
+
+OpenClaw created a Markdown checklist for safe OpenClaw usage inside the sandbox workspace.
+
+Conclusion:
+
+OpenClaw can write files inside the sandbox workspace while using openrouter/auto.
