@@ -130,3 +130,34 @@ pong
 Conclusion:
 
 Ollama Cloud works as an additional backup provider in OpenClaw.
+
+## Current provider pool
+
+Confirmed OpenClaw providers:
+
+1. OpenRouter
+   - Working model: openrouter/auto
+   - Role: primary Sagent/OpenClaw model
+
+2. Google Gemini
+   - Working model: google/gemini-2.5-flash-lite
+   - Role: backup provider
+
+3. Ollama Cloud
+   - Working model: ollama-cloud/minimax-m3
+   - Role: backup provider
+
+Confirmed separate OpenCode worker:
+
+OpenCode Zen Free models remain available even after logging out from Ollama Cloud.
+
+Visible models include:
+- opencode/deepseek-v4-flash-free
+- opencode/north-mini-code-free
+- opencode/nemotron-3-ultra-free
+- opencode/mimo-v2.5-free
+- opencode/hy3-free
+
+Conclusion:
+
+Sagent currently has three working OpenClaw provider pools plus one separate OpenCode coding-worker pool.
