@@ -103,3 +103,30 @@ pong
 Conclusion:
 
 Gemini works as a backup provider in OpenClaw.
+
+## Confirmed Ollama Cloud backup test
+
+Provider:
+
+Ollama Cloud
+
+Working OpenClaw model:
+
+ollama-cloud/minimax-m3
+
+Important naming note:
+
+- Ollama CLI model name: minimax-m3:cloud
+- OpenClaw model name: ollama-cloud/minimax-m3
+
+Command:
+
+openclaw agent --agent main --session-key ollama-cloud-minimax-m3-test --message "Reply with exactly: pong"
+
+Result:
+
+pong
+
+Conclusion:
+
+Ollama Cloud works as an additional backup provider in OpenClaw.
