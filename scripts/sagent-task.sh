@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 
 TASK="${*:-}"
 
@@ -12,8 +12,12 @@ WORKSPACE="$HOME/.openclaw/workspace"
 INBOX="$WORKSPACE/inbox"
 RUNS="$WORKSPACE/runs"
 HISTORY="$RUNS/history"
+SETTINGS_DIR="$WORKSPACE/settings"
+APPROVALS="$WORKSPACE/approvals"
+APPROVAL_HISTORY="$APPROVALS/history"
+SECURITY_MODE_FILE="$SETTINGS_DIR/security-mode.txt"
 
-mkdir -p "$INBOX" "$RUNS" "$HISTORY"
+mkdir -p "$INBOX" "$RUNS" "$HISTORY" "$SETTINGS_DIR" "$APPROVALS" "$APPROVAL_HISTORY"
 
 TIMESTAMP="$(date +"%Y%m%d-%H%M%S")"
 SESSION_KEY="sagent-bridge-$TIMESTAMP"
@@ -21,15 +25,235 @@ SESSION_KEY="sagent-bridge-$TIMESTAMP"
 TASK_FILE="$INBOX/next-task.txt"
 OUTPUT_FILE="$RUNS/last-output.txt"
 STATUS_FILE="$RUNS/last-status.json"
+RISK_FILE="$RUNS/last-risk.json"
 HISTORY_FILE="$HISTORY/run-$TIMESTAMP.txt"
 HISTORY_STATUS_FILE="$HISTORY/run-$TIMESTAMP.status.json"
+HISTORY_RISK_FILE="$HISTORY/run-$TIMESTAMP.risk.json"
+PENDING_FILE="$APPROVALS/pending.json"
+PENDING_HISTORY_FILE="$APPROVAL_HISTORY/pending-$TIMESTAMP.json"
+DENIED_FILE="$APPROVALS/denied.json"
+
+if [ ! -f "$SECURITY_MODE_FILE" ]; then
+  echo "approve_dangerous" > "$SECURITY_MODE_FILE"
+fi
+
+SECURITY_MODE="$(cat "$SECURITY_MODE_FILE")"
+case "$SECURITY_MODE" in
+  always_ask|approve_dangerous|full_access)
+    ;;
+  *)
+    SECURITY_MODE="approve_dangerous"
+    echo "$SECURITY_MODE" > "$SECURITY_MODE_FILE"
+    ;;
+esac
+
+json_escape() {
+  local value="${1:-}"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\t'/\\t}"
+  printf '%s' "$value"
+}
+
+classify_risk() {
+  local task_lower
+  task_lower="$(printf '%s' "$TASK" | tr '[:upper:]' '[:lower:]')"
+
+  RISK_LEVEL=1
+  RISK_REASON="normal read or inspection task"
+
+  case "$task_lower" in
+    *"rm -rf /"*|*"wipe"*|*"format disk"*|*"exfiltrate"*|*"bypass security"*|*"disable firewall"*|*"malware"*|*"steal"*)
+      RISK_LEVEL=6
+      RISK_REASON="destructive, illegal, or explicitly dangerous action"
+      return
+      ;;
+  esac
+
+  case "$task_lower" in
+    *".env"*|*"token"*|*"secret"*|*"private_key"*|*"~/.ssh"*|*"ssh"*|*"password"*|*"passwort"*|*"api key"*|*"keychain"*|*"banking"*|*"wallet"*)
+      RISK_LEVEL=5
+      RISK_REASON="sensitive data, credentials, or secrets mentioned"
+      return
+      ;;
+  esac
+
+  case "$task_lower" in
+    *"git push"*|*"merge"*|*"deploy"*|*"send email"*|*"sende email"*|*"whatsapp"*|*"telegram"*|*"calendar"*|*"kalender"*|*"delete"*|*"löschen"*|*"rm"*|*"install"*|*"brew install"*|*"npm install -g"*|*"account"*|*"payment"*|*"kauf"*|*"buchen"*)
+      RISK_LEVEL=4
+      RISK_REASON="external effect, deletion, installation, publishing, or account/payment action"
+      return
+      ;;
+  esac
+
+  case "$task_lower" in
+    *"npm test"*|*"pytest"*|*"test"*|*"format"*|*"lint"*|*"git status"*|*"git diff"*|*"git commit"*)
+      RISK_LEVEL=3
+      RISK_REASON="local command, test, formatter, linter, or local git action"
+      return
+      ;;
+  esac
+
+  case "$task_lower" in
+    *"erstelle"*|*"schreibe"*|*"ändere"*|*"aendere"*|*"update"*|*"edit"*)
+      RISK_LEVEL=2
+      RISK_REASON="normal local write or edit task"
+      return
+      ;;
+  esac
+
+  case "$task_lower" in
+    *"explain"*|*"erkläre"*|*"erklaere"*|*"plane"*|*"summarize"*|*"zusammenfassen"*)
+      RISK_LEVEL=0
+      RISK_REASON="reasoning, planning, or summarization task"
+      return
+      ;;
+    *"analysiere"*)
+      RISK_LEVEL=0
+      RISK_REASON="analysis task without dangerous keywords"
+      return
+      ;;
+  esac
+
+  case "$task_lower" in
+    *"lies"*|*"read"*|*"inspect"*|*"prüfe"*|*"pruefe"*|*"schaue"*|*"analysiere"*)
+      RISK_LEVEL=1
+      RISK_REASON="read, inspect, or analysis task"
+      return
+      ;;
+  esac
+}
+
+write_risk_file() {
+  local exit_code="$1"
+  local escaped_task escaped_reason
+  escaped_task="$(json_escape "$TASK")"
+  escaped_reason="$(json_escape "$RISK_REASON")"
+
+  cat > "$RISK_FILE" <<RISK_EOF
+{
+  "timestamp": "$TIMESTAMP",
+  "session_key": "$SESSION_KEY",
+  "task": "$escaped_task",
+  "security_mode": "$SECURITY_MODE",
+  "risk_level": $RISK_LEVEL,
+  "risk_reason": "$escaped_reason",
+  "exit_code": $exit_code
+}
+RISK_EOF
+
+  cp "$RISK_FILE" "$HISTORY_RISK_FILE"
+}
+
+write_status_file() {
+  local exit_code="$1"
+  cat > "$STATUS_FILE" <<STATUS_EOF
+{
+  "timestamp": "$TIMESTAMP",
+  "session_key": "$SESSION_KEY",
+  "task_file": "$TASK_FILE",
+  "output_file": "$OUTPUT_FILE",
+  "history_file": "$HISTORY_FILE",
+  "risk_file": "$RISK_FILE",
+  "exit_code": $exit_code
+}
+STATUS_EOF
+
+  cp "$STATUS_FILE" "$HISTORY_STATUS_FILE"
+}
+
+write_pending_approval() {
+  local escaped_task escaped_reason
+  escaped_task="$(json_escape "$TASK")"
+  escaped_reason="$(json_escape "$RISK_REASON")"
+
+  cat > "$PENDING_FILE" <<PENDING_EOF
+{
+  "timestamp": "$TIMESTAMP",
+  "session_key": "$SESSION_KEY",
+  "task": "$escaped_task",
+  "security_mode": "$SECURITY_MODE",
+  "risk_level": $RISK_LEVEL,
+  "risk_reason": "$escaped_reason",
+  "requested_action": "execute_task",
+  "status": "pending"
+}
+PENDING_EOF
+
+  cp "$PENDING_FILE" "$PENDING_HISTORY_FILE"
+}
+
+write_denied() {
+  local escaped_task escaped_reason
+  escaped_task="$(json_escape "$TASK")"
+  escaped_reason="$(json_escape "$RISK_REASON")"
+
+  cat > "$DENIED_FILE" <<DENIED_EOF
+{
+  "timestamp": "$TIMESTAMP",
+  "session_key": "$SESSION_KEY",
+  "task": "$escaped_task",
+  "security_mode": "$SECURITY_MODE",
+  "risk_level": $RISK_LEVEL,
+  "risk_reason": "$escaped_reason",
+  "requested_action": "execute_task",
+  "status": "denied"
+}
+DENIED_EOF
+}
 
 cat > "$TASK_FILE" <<TASK_EOF
 $TASK
 TASK_EOF
 
+classify_risk
+
 echo "Saved task to: $TASK_FILE"
 echo "Session: $SESSION_KEY"
+echo "Security Mode: $SECURITY_MODE"
+echo "Risk Level: $RISK_LEVEL"
+echo "Reason: $RISK_REASON"
+
+if [ "$RISK_LEVEL" -eq 6 ]; then
+  {
+    echo "Denied because risk level is 6."
+    echo "Security Mode: $SECURITY_MODE"
+    echo "Risk Level: $RISK_LEVEL"
+    echo "Reason: $RISK_REASON"
+    echo "Denied path: $DENIED_FILE"
+  } | tee "$OUTPUT_FILE"
+  cp "$OUTPUT_FILE" "$HISTORY_FILE"
+  write_denied
+  write_risk_file 20
+  write_status_file 20
+  echo "Saved risk to: $RISK_FILE"
+  echo "Saved denied request to: $DENIED_FILE"
+  exit 20
+fi
+
+if [ "$SECURITY_MODE" = "always_ask" ] || { [ "$SECURITY_MODE" = "approve_dangerous" ] && [ "$RISK_LEVEL" -ge 4 ]; }; then
+  {
+    if [ "$SECURITY_MODE" = "always_ask" ]; then
+      echo "Approval required because security mode is always_ask."
+    else
+      echo "Approval required because risk level is $RISK_LEVEL."
+    fi
+    echo "Security Mode: $SECURITY_MODE"
+    echo "Risk Level: $RISK_LEVEL"
+    echo "Reason: $RISK_REASON"
+    echo "Pending approval path: $PENDING_FILE"
+  } | tee "$OUTPUT_FILE"
+  cp "$OUTPUT_FILE" "$HISTORY_FILE"
+  write_pending_approval
+  write_risk_file 10
+  write_status_file 10
+  echo "Saved risk to: $RISK_FILE"
+  echo "Saved pending approval to: $PENDING_FILE"
+  exit 10
+fi
+
 echo "Running OpenClaw..."
 
 set +e
@@ -41,24 +265,15 @@ openclaw agent \
 OPENCLAW_EXIT=${PIPESTATUS[0]}
 set -e
 
-cat > "$STATUS_FILE" <<STATUS_EOF
-{
-  "timestamp": "$TIMESTAMP",
-  "session_key": "$SESSION_KEY",
-  "task_file": "$TASK_FILE",
-  "output_file": "$OUTPUT_FILE",
-  "history_file": "$HISTORY_FILE",
-  "exit_code": $OPENCLAW_EXIT
-}
-STATUS_EOF
-
 cp "$OUTPUT_FILE" "$HISTORY_FILE"
-cp "$STATUS_FILE" "$HISTORY_STATUS_FILE"
+write_risk_file "$OPENCLAW_EXIT"
+write_status_file "$OPENCLAW_EXIT"
 
 echo ""
 echo "Saved output to: $OUTPUT_FILE"
 echo "Saved history to: $HISTORY_FILE"
 echo "Saved status to: $STATUS_FILE"
+echo "Saved risk to: $RISK_FILE"
 
 if [ "$OPENCLAW_EXIT" -ne 0 ]; then
   echo ""
