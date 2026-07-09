@@ -30,7 +30,9 @@ HISTORY_FILE="$HISTORY/run-$TIMESTAMP.txt"
 HISTORY_STATUS_FILE="$HISTORY/run-$TIMESTAMP.status.json"
 HISTORY_RISK_FILE="$HISTORY/run-$TIMESTAMP.risk.json"
 PENDING_FILE="$APPROVALS/pending.json"
+PENDING_TASK_FILE="$APPROVALS/pending-task.txt"
 PENDING_HISTORY_FILE="$APPROVAL_HISTORY/pending-$TIMESTAMP.json"
+PENDING_HISTORY_TASK_FILE="$APPROVAL_HISTORY/pending-$TIMESTAMP.txt"
 DENIED_FILE="$APPROVALS/denied.json"
 
 if [ ! -f "$SECURITY_MODE_FILE" ]; then
@@ -182,7 +184,12 @@ write_pending_approval() {
 }
 PENDING_EOF
 
+  cat > "$PENDING_TASK_FILE" <<PENDING_TASK_EOF
+$TASK
+PENDING_TASK_EOF
+
   cp "$PENDING_FILE" "$PENDING_HISTORY_FILE"
+  cp "$PENDING_TASK_FILE" "$PENDING_HISTORY_TASK_FILE"
 }
 
 write_denied() {
@@ -251,6 +258,7 @@ if [ "$SECURITY_MODE" = "always_ask" ] || { [ "$SECURITY_MODE" = "approve_danger
   write_status_file 10
   echo "Saved risk to: $RISK_FILE"
   echo "Saved pending approval to: $PENDING_FILE"
+  echo "Saved pending task to: $PENDING_TASK_FILE"
   exit 10
 fi
 
