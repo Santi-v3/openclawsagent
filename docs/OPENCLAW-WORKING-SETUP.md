@@ -36,3 +36,30 @@ Use openrouter/auto as the primary OpenClaw/Sagent model.
 2. Keep skills disabled unless reviewed.
 3. Add security supervisor notes.
 4. Later test fallback models only if needed.
+
+## Confirmed sandbox read test
+
+Created test file:
+
+~/.openclaw/workspace/sagent-test/notes.txt
+
+Content:
+
+Sagent test note:
+- Use OpenClaw as runtime.
+- Use OpenRouter auto as model.
+- Keep skills disabled unless reviewed.
+
+Prompt in OpenClaw chat:
+
+Lies die Datei sagent-test/notes.txt und fasse sie in 3 Stichpunkten zusammen. Ändere keine Dateien.
+
+Result:
+
+- OpenClaw als Laufzeitumgebung verwenden.
+- OpenRouter auto als Modell nutzen.
+- Skills deaktiviert lassen, es sei denn, sie wurden überprüft.
+
+Conclusion:
+
+OpenClaw can read and summarize files inside the sandbox workspace while using openrouter/auto.
