@@ -320,3 +320,114 @@ Supervisor
 → OpenClaw/OpenCode
 → Logs
 → Approval when needed
+
+## Security modes
+
+Sagent should support three security modes.
+
+These modes are not feature locks. They define how much human approval is required before actions are executed.
+
+### 1. always_ask
+
+Command:
+
+/set security always_ask
+
+Behavior:
+
+- every task requires approval before execution
+- safest mode
+- useful during early testing
+- useful when Sagent has access to sensitive workspaces or accounts
+
+Example:
+
+Read file
+→ approval required
+
+Edit file
+→ approval required
+
+Run command
+→ approval required
+
+Send message
+→ approval required
+
+### 2. approve_dangerous
+
+Command:
+
+/set security approve_dangerous
+
+Behavior:
+
+- default recommended mode
+- low-risk and normal tasks run automatically
+- dangerous or external-impact actions require approval
+- all actions are logged
+
+Automatic examples:
+
+- reasoning
+- reading normal project files
+- editing normal project files
+- running tests
+- creating local notes
+
+Approval examples:
+
+- git push
+- sending email
+- sending WhatsApp/ntfy/Telegram messages
+- deleting files
+- installing software
+- accessing secrets such as .env, API keys, SSH keys
+- changing external accounts
+
+### 3. full_access
+
+Command:
+
+/set security full_access
+
+Behavior:
+
+- Sagent can execute tasks without asking
+- actions are still logged
+- intended for trusted local workflows
+- user accepts higher risk
+
+Even in full_access mode, the bridge should still log:
+
+- task
+- timestamp
+- model/session
+- output
+- detected risk level
+- changed files if known
+- exit code
+
+### Security mode storage
+
+Initial simple storage:
+
+~/.openclaw/workspace/settings/security-mode.txt
+
+Allowed values:
+
+always_ask
+approve_dangerous
+full_access
+
+Default mode:
+
+approve_dangerous
+
+### Future command format
+
+/set security always_ask
+/set security approve_dangerous
+/set security full_access
+
+The bridge should later parse these commands and update the security mode file.
