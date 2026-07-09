@@ -81,3 +81,25 @@ OpenClaw created a Markdown checklist for safe OpenClaw usage inside the sandbox
 Conclusion:
 
 OpenClaw can write files inside the sandbox workspace while using openrouter/auto.
+
+## Confirmed Gemini backup test
+
+Provider:
+
+Google / Gemini
+
+Model:
+
+google/gemini-2.5-flash-lite
+
+Command:
+
+openclaw agent --agent main --session-key gemini-test-1 --message "Reply with exactly: pong"
+
+Result:
+
+pong
+
+Conclusion:
+
+Gemini works as a backup provider in OpenClaw.
