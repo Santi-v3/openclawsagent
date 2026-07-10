@@ -62,6 +62,17 @@ scripts/sagent-task.sh "/ntfy --disable"
 
 Do not use secrets, account IDs, or private data in ntfy topics.
 
+## OpenCode Worker Commands
+
+Run an explicit coding task through OpenCode:
+
+```sh
+scripts/sagent-task.sh "/opencode <task>"
+scripts/sagent-task.sh "/code <task>"
+```
+
+These route to `scripts/sagent-opencode-worker.sh` and do not call OpenClaw.
+
 ## Help
 
 ```sh

@@ -278,6 +278,8 @@ Sagent commands:
   /approval status|approve|deny
   /set ntfy <topic>
   /ntfy --disable
+  /opencode <task>
+  /code <task>
 
 Normal tasks without / are sent to OpenClaw.
 HELP_EOF
@@ -313,6 +315,12 @@ handle_internal_command() {
       ;;
     "/ntfy "*)
       run_internal_command "scripts/sagent-set-ntfy.sh" "$SCRIPT_DIR/sagent-set-ntfy.sh" "${TASK#/ntfy }"
+      ;;
+    "/opencode "*)
+      run_internal_command "scripts/sagent-opencode-worker.sh" "$SCRIPT_DIR/sagent-opencode-worker.sh" "${TASK#/opencode }"
+      ;;
+    "/code "*)
+      run_internal_command "scripts/sagent-opencode-worker.sh" "$SCRIPT_DIR/sagent-opencode-worker.sh" "${TASK#/code }"
       ;;
     /*)
       echo "Unknown Sagent command: $TASK"

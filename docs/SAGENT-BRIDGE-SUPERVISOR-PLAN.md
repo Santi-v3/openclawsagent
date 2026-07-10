@@ -288,6 +288,8 @@ Safety rules for OpenCode worker:
 - no git push / merge / rebase / force-push
 - summarize changed files and risks after edits
 
+The worker script and slash-command usage are documented in `docs/OPENCODE-WORKER.md`.
+
 ## First milestone
 
 Build a simple script:
