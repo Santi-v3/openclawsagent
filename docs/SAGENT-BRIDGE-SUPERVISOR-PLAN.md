@@ -107,6 +107,8 @@ Example OpenClaw call:
 
 openclaw agent --agent main --session-key bridge-run --message "$(cat ~/.openclaw/workspace/inbox/next-task.txt)"
 
+Slash command routing for local bridge control is documented in `docs/COMMANDS.md`.
+
 ## Safety defaults
 
 Default mode is read-only.

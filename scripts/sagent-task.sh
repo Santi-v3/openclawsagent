@@ -27,6 +27,7 @@ TASK_FILE="$INBOX/next-task.txt"
 OUTPUT_FILE="$RUNS/last-output.txt"
 STATUS_FILE="$RUNS/last-status.json"
 RISK_FILE="$RUNS/last-risk.json"
+LAST_COMMAND_FILE="$RUNS/last-command.json"
 HISTORY_FILE="$HISTORY/run-$TIMESTAMP.txt"
 HISTORY_STATUS_FILE="$HISTORY/run-$TIMESTAMP.status.json"
 HISTORY_RISK_FILE="$HISTORY/run-$TIMESTAMP.risk.json"
@@ -238,6 +239,91 @@ write_denied() {
 }
 DENIED_EOF
 }
+
+write_last_command_file() {
+  local routed_to="$1"
+  local exit_code="$2"
+  local escaped_command escaped_routed_to
+  escaped_command="$(json_escape "$TASK")"
+  escaped_routed_to="$(json_escape "$routed_to")"
+
+  cat > "$LAST_COMMAND_FILE" <<COMMAND_EOF
+{
+  "timestamp": "$TIMESTAMP",
+  "command": "$escaped_command",
+  "routed_to": "$escaped_routed_to",
+  "exit_code": $exit_code
+}
+COMMAND_EOF
+}
+
+run_internal_command() {
+  local routed_to="$1"
+  shift
+
+  set +e
+  "$@"
+  local command_exit=$?
+  set -e
+
+  write_last_command_file "$routed_to" "$command_exit"
+  exit "$command_exit"
+}
+
+show_sagent_help() {
+  cat <<HELP_EOF
+Sagent commands:
+  /set security always_ask|approve_dangerous|full_access
+  /security status
+  /approval status|approve|deny
+  /set ntfy <topic>
+  /ntfy --disable
+
+Normal tasks without / are sent to OpenClaw.
+HELP_EOF
+}
+
+handle_internal_command() {
+  case "$TASK" in
+    "/help"|"/sagent help")
+      show_sagent_help
+      write_last_command_file "help" 0
+      exit 0
+      ;;
+    "/set security")
+      run_internal_command "scripts/sagent-set-security.sh" "$SCRIPT_DIR/sagent-set-security.sh"
+      ;;
+    "/set security always_ask"|"/set security approve_dangerous"|"/set security full_access")
+      run_internal_command "scripts/sagent-set-security.sh" "$SCRIPT_DIR/sagent-set-security.sh" "${TASK#/set security }"
+      ;;
+    "/security"|"/security status")
+      run_internal_command "scripts/sagent-set-security.sh" "$SCRIPT_DIR/sagent-set-security.sh"
+      ;;
+    "/approval status"|"/approval approve"|"/approval deny")
+      run_internal_command "scripts/sagent-approval.sh" "$SCRIPT_DIR/sagent-approval.sh" "${TASK#/approval }"
+      ;;
+    "/ntfy"|"/ntfy status")
+      run_internal_command "scripts/sagent-set-ntfy.sh" "$SCRIPT_DIR/sagent-set-ntfy.sh"
+      ;;
+    "/set ntfy --disable"|"/ntfy --disable")
+      run_internal_command "scripts/sagent-set-ntfy.sh" "$SCRIPT_DIR/sagent-set-ntfy.sh" "--disable"
+      ;;
+    "/set ntfy "*)
+      run_internal_command "scripts/sagent-set-ntfy.sh" "$SCRIPT_DIR/sagent-set-ntfy.sh" "${TASK#/set ntfy }"
+      ;;
+    "/ntfy "*)
+      run_internal_command "scripts/sagent-set-ntfy.sh" "$SCRIPT_DIR/sagent-set-ntfy.sh" "${TASK#/ntfy }"
+      ;;
+    /*)
+      echo "Unknown Sagent command: $TASK"
+      echo "Run /help for available commands."
+      write_last_command_file "unknown" 2
+      exit 2
+      ;;
+  esac
+}
+
+handle_internal_command
 
 cat > "$TASK_FILE" <<TASK_EOF
 $TASK
