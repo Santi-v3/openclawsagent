@@ -2,6 +2,7 @@
 set -euo pipefail
 
 TASK="${*:-}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -z "$TASK" ]; then
   echo "Usage: scripts/sagent-task.sh \"<task>\""
@@ -192,6 +193,33 @@ PENDING_TASK_EOF
   cp "$PENDING_TASK_FILE" "$PENDING_HISTORY_TASK_FILE"
 }
 
+notify_pending_approval() {
+  local task_excerpt message
+  if [ "$RISK_LEVEL" -eq 5 ]; then
+    task_excerpt="Task hidden because risk level is sensitive."
+  else
+    task_excerpt="$TASK"
+    if [ "${#task_excerpt}" -gt 200 ]; then
+      task_excerpt="${task_excerpt:0:200}..."
+    fi
+  fi
+
+  message="$(cat <<MESSAGE_EOF
+Security mode: $SECURITY_MODE
+Risk: $RISK_LEVEL
+Reason: $RISK_REASON
+Task: $task_excerpt
+
+Run:
+scripts/sagent-approval.sh status
+scripts/sagent-approval.sh approve
+scripts/sagent-approval.sh deny
+MESSAGE_EOF
+)"
+
+  "$SCRIPT_DIR/sagent-notify.sh" "Sagent approval required" "$message"
+}
+
 write_denied() {
   local escaped_task escaped_reason
   escaped_task="$(json_escape "$TASK")"
@@ -254,6 +282,7 @@ if [ "$SECURITY_MODE" = "always_ask" ] || { [ "$SECURITY_MODE" = "approve_danger
   } | tee "$OUTPUT_FILE"
   cp "$OUTPUT_FILE" "$HISTORY_FILE"
   write_pending_approval
+  notify_pending_approval
   write_risk_file 10
   write_status_file 10
   echo "Saved risk to: $RISK_FILE"

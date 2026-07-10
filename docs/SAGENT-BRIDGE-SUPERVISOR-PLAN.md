@@ -39,7 +39,7 @@ Responsible for:
 - running OpenClaw commands
 - storing outputs/logs
 - creating approval requests
-- sending notifications via ntfy later
+- sending optional ntfy notifications for pending approvals
 
 ### OpenClaw
 
@@ -252,7 +252,9 @@ Preferred notification system:
 
 ntfy
 
-Future notification example:
+Notification setup is documented in `docs/NOTIFICATIONS.md`.
+
+Example notification command:
 
 curl -d "Approval needed: OpenClaw wants to edit file X. Approve or deny in Sagent UI." ntfy.sh/<private-topic>
 
