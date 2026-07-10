@@ -289,11 +289,32 @@ OpenCode should not be forced into OpenClaw as a normal LLM provider for now.
 Instead:
 
 OpenClaw / Sagent Bridge
-→ detects coding task
+→ detects coding task via auto-code routing
 → calls OpenCode CLI in allowed project folder
 → OpenCode uses OpenCode Zen Free models
 → result is logged
 → Supervisor reviews output
+
+### Auto-Code Routing
+
+When auto-code routing is enabled (`/auto-code enabled`), `scripts/sagent-task.sh` detects coding tasks automatically using keyword and file-extension matching:
+
+- Keywords: `erstelle`, `schreibe`, `ändere`, `fix`, `bug`, `refactor`, `test`, `implementiere`
+- File extensions: `.py`, `.sh`, `.js`, `.ts`, `.rs`, `.go`, `.java`, `.c`, `.cpp`, `.h`
+
+Coding tasks are routed to the OpenCode worker. General knowledge questions still go to OpenClaw.
+
+The setting is stored in `~/.openclaw/workspace/settings/auto-code-routing.txt` and managed via:
+
+```sh
+scripts/sagent-task.sh "/auto-code status"
+scripts/sagent-task.sh "/auto-code enabled"
+scripts/sagent-task.sh "/auto-code disabled"
+```
+
+See `docs/AUTO-CODE-ROUTING.md` for the full documentation.
+
+### OpenCode Worker
 
 Example command:
 

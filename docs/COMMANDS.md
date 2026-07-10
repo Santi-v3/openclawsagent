@@ -9,6 +9,8 @@
 
 Unknown slash commands are not forwarded to OpenClaw. This prevents accidental agent runs when a local bridge command is mistyped.
 
+When auto-code routing is enabled, normal tasks that match coding keywords are automatically routed to the OpenCode worker. See `docs/AUTO-CODE-ROUTING.md` for details.
+
 ## Security Commands
 
 Set the security mode:
@@ -61,6 +63,28 @@ scripts/sagent-task.sh "/ntfy --disable"
 ```
 
 Do not use secrets, account IDs, or private data in ntfy topics.
+
+## Auto-Code Routing Commands
+
+Show auto-code routing status:
+
+```sh
+scripts/sagent-task.sh "/auto-code"
+scripts/sagent-task.sh "/auto-code status"
+```
+
+Enable or disable auto-code routing:
+
+```sh
+scripts/sagent-task.sh "/auto-code enabled"
+scripts/sagent-task.sh "/auto-code disabled"
+scripts/sagent-task.sh "/set auto-code enabled"
+scripts/sagent-task.sh "/set auto-code disabled"
+```
+
+When enabled, normal tasks that look like coding tasks (file creation, editing, testing, refactoring) are automatically routed to `scripts/sagent-opencode-worker.sh` instead of OpenClaw. General knowledge questions still go to OpenClaw.
+
+See `docs/AUTO-CODE-ROUTING.md` for the full detection logic and configuration.
 
 ## OpenCode Worker Commands
 

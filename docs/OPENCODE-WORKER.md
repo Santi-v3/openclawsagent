@@ -32,6 +32,28 @@ Example:
 scripts/sagent-opencode-worker.sh "Erkläre kurz die Aufgabe dieses Repos. Ändere keine Dateien."
 ```
 
+## Auto-Routing
+
+When auto-code routing is enabled, `scripts/sagent-task.sh` automatically detects coding tasks and routes them to the OpenCode worker without needing `/opencode` or `/code`.
+
+```sh
+scripts/sagent-task.sh "/auto-code enabled"
+```
+
+Now normal tasks with coding keywords go to OpenCode automatically:
+
+```sh
+scripts/sagent-task.sh "Erstelle eine README-Datei"
+```
+
+Knowledge questions still go to OpenClaw:
+
+```sh
+scripts/sagent-task.sh "Was ist ein LLM?"
+```
+
+See `docs/AUTO-CODE-ROUTING.md` for full configuration and detection logic.
+
 ## Slash Usage
 
 ```sh

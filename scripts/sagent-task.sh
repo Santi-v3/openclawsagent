@@ -17,6 +17,7 @@ SETTINGS_DIR="$WORKSPACE/settings"
 APPROVALS="$WORKSPACE/approvals"
 APPROVAL_HISTORY="$APPROVALS/history"
 SECURITY_MODE_FILE="$SETTINGS_DIR/security-mode.txt"
+AUTO_CODE_FILE="$SETTINGS_DIR/auto-code-routing.txt"
 
 mkdir -p "$INBOX" "$RUNS" "$HISTORY" "$SETTINGS_DIR" "$APPROVALS" "$APPROVAL_HISTORY"
 
@@ -50,6 +51,23 @@ case "$SECURITY_MODE" in
     echo "$SECURITY_MODE" > "$SECURITY_MODE_FILE"
     ;;
 esac
+
+is_coding_task() {
+  local task_lower
+  task_lower="$(printf '%s' "$TASK" | tr '[:upper:]' '[:lower:]')"
+
+  case "$task_lower" in
+    *"erstelle"*|*"schreibe"*|*"ändere"*|*"aendere"*|*"erzeuge"*|*"implementiere"*|*"baue"*|*"fix"*|*"repariere"*|*"bug"*|*"refactor"*|*"test"*|*"pytest"*|*"npm test"*|*"lint"*|*"format"*|*"git commit"*|*"git add"*)
+      return 0
+      ;;
+  esac
+
+  if printf '%s' "$task_lower" | grep -qE '\.(py|sh|js|ts|rs|go|java|c|cpp|h|rb|php|css|html|md|json|yaml|yml|toml|env|gitignore)'; then
+    return 0
+  fi
+
+  return 1
+}
 
 json_escape() {
   local value="${1:-}"
@@ -278,12 +296,16 @@ Sagent commands:
   /approval status|approve|deny
   /set ntfy <topic>
   /ntfy --disable
+  /auto-code status
+  /auto-code enabled|disabled
+  /set auto-code enabled|disabled
   /opencode <task>
   /code <task>
   /health
   /openclaw health
 
 Normal tasks without / are sent to OpenClaw.
+When auto-code routing is enabled, coding tasks are automatically routed to the OpenCode worker.
 HELP_EOF
 }
 
@@ -317,6 +339,15 @@ handle_internal_command() {
       ;;
     "/ntfy "*)
       run_internal_command "scripts/sagent-set-ntfy.sh" "$SCRIPT_DIR/sagent-set-ntfy.sh" "${TASK#/ntfy }"
+      ;;
+    "/auto-code"|"/auto-code status")
+      run_internal_command "scripts/sagent-set-auto-code.sh" "$SCRIPT_DIR/sagent-set-auto-code.sh" "status"
+      ;;
+    "/auto-code enabled"|"/set auto-code enabled")
+      run_internal_command "scripts/sagent-set-auto-code.sh" "$SCRIPT_DIR/sagent-set-auto-code.sh" "enabled"
+      ;;
+    "/auto-code disabled"|"/set auto-code disabled")
+      run_internal_command "scripts/sagent-set-auto-code.sh" "$SCRIPT_DIR/sagent-set-auto-code.sh" "disabled"
       ;;
     "/opencode "*)
       run_internal_command "scripts/sagent-opencode-worker.sh" "$SCRIPT_DIR/sagent-opencode-worker.sh" "${TASK#/opencode }"
@@ -388,6 +419,38 @@ if [ "$SECURITY_MODE" = "always_ask" ] || { [ "$SECURITY_MODE" = "approve_danger
   echo "Saved pending approval to: $PENDING_FILE"
   echo "Saved pending task to: $PENDING_TASK_FILE"
   exit 10
+fi
+
+AUTO_CODE="disabled"
+if [ -f "$AUTO_CODE_FILE" ]; then
+  AUTO_CODE="$(cat "$AUTO_CODE_FILE")"
+fi
+
+if [ "$AUTO_CODE" = "enabled" ] && is_coding_task; then
+  echo "Auto-code routing: enabled — routing coding task to OpenCode worker..."
+  echo ""
+
+  set +e
+  "$SCRIPT_DIR/sagent-opencode-worker.sh" "$TASK" 2>&1 | tee "$OUTPUT_FILE"
+  OPENCLAW_EXIT=${PIPESTATUS[0]}
+  set -e
+
+  cp "$OUTPUT_FILE" "$HISTORY_FILE"
+  write_risk_file "$OPENCLAW_EXIT"
+  write_status_file "$OPENCLAW_EXIT"
+
+  echo ""
+  echo "Saved output to: $OUTPUT_FILE"
+  echo "Saved history to: $HISTORY_FILE"
+  echo "Saved status to: $STATUS_FILE"
+  echo "Saved risk to: $RISK_FILE"
+
+  if [ "$OPENCLAW_EXIT" -ne 0 ]; then
+    echo ""
+    echo "OpenCode worker failed with exit code: $OPENCLAW_EXIT"
+    exit "$OPENCLAW_EXIT"
+  fi
+  exit "$OPENCLAW_EXIT"
 fi
 
 echo "Running OpenClaw..."
