@@ -109,6 +109,26 @@ openclaw agent --agent main --session-key bridge-run --message "$(cat ~/.opencla
 
 Slash command routing for local bridge control is documented in `docs/COMMANDS.md`.
 
+### OpenClaw Healthcheck
+
+The healthcheck script `scripts/sagent-healthcheck.sh` tests whether OpenClaw is installed, configured with an active model, and able to respond to a ping message.
+
+Available via:
+
+```sh
+scripts/sagent-task.sh "/health"
+scripts/sagent-task.sh "/openclaw health"
+```
+
+The healthcheck:
+- checks the `openclaw` binary is on `PATH`
+- reads the active model via `openclaw models status --plain`
+- runs a ping test via `openclaw agent --agent main` with message `Antworte exakt mit: pong`
+- writes status and output logs to `~/.openclaw/workspace/health/`
+- returns exit code 0 (healthy), 1 (unhealthy), or 127 (missing openclaw)
+
+No automatic gateway restart is performed. See `docs/HEALTHCHECK.md` for details.
+
 ## Safety defaults
 
 Default mode is read-only.

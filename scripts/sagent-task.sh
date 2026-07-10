@@ -280,6 +280,8 @@ Sagent commands:
   /ntfy --disable
   /opencode <task>
   /code <task>
+  /health
+  /openclaw health
 
 Normal tasks without / are sent to OpenClaw.
 HELP_EOF
@@ -321,6 +323,9 @@ handle_internal_command() {
       ;;
     "/code "*)
       run_internal_command "scripts/sagent-opencode-worker.sh" "$SCRIPT_DIR/sagent-opencode-worker.sh" "${TASK#/code }"
+      ;;
+    "/health"|"/openclaw health")
+      run_internal_command "scripts/sagent-healthcheck.sh" "$SCRIPT_DIR/sagent-healthcheck.sh"
       ;;
     /*)
       echo "Unknown Sagent command: $TASK"

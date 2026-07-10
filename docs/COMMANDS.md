@@ -73,6 +73,17 @@ scripts/sagent-task.sh "/code <task>"
 
 These route to `scripts/sagent-opencode-worker.sh` and do not call OpenClaw.
 
+## Healthcheck Commands
+
+Run the OpenClaw healthcheck:
+
+```sh
+scripts/sagent-task.sh "/health"
+scripts/sagent-task.sh "/openclaw health"
+```
+
+Both route to `scripts/sagent-healthcheck.sh`. The healthcheck tests the `openclaw` binary, the active model, and runs a ping test. Logs are written to `~/.openclaw/workspace/health/`. See `docs/HEALTHCHECK.md` for details.
+
 ## Help
 
 ```sh
