@@ -301,6 +301,8 @@ Sagent commands:
   /set auto-code enabled|disabled
   /opencode <task>
   /code <task>
+  /status
+  /sagent status
   /health
   /openclaw health
 
@@ -354,6 +356,9 @@ handle_internal_command() {
       ;;
     "/code "*)
       run_internal_command "scripts/sagent-opencode-worker.sh" "$SCRIPT_DIR/sagent-opencode-worker.sh" "${TASK#/code }"
+      ;;
+    "/status"|"/sagent status")
+      run_internal_command "scripts/sagent-status.sh" "$SCRIPT_DIR/sagent-status.sh"
       ;;
     "/health"|"/openclaw health")
       run_internal_command "scripts/sagent-healthcheck.sh" "$SCRIPT_DIR/sagent-healthcheck.sh"

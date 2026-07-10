@@ -113,6 +113,25 @@ Slash command routing for local bridge control is documented in `docs/COMMANDS.m
 
 The healthcheck script `scripts/sagent-healthcheck.sh` tests whether OpenClaw is installed, configured with an active model, and able to respond to a ping message.
 
+### Central Status Command
+
+The status command `scripts/sagent-status.sh` provides a single-pane overview of the entire Sagent runtime. It reads data from all subsystems — security, auto-code, ntfy, health, approvals, last risk, last command, and OpenCode worker — and displays them together.
+
+Available via:
+
+```sh
+scripts/sagent-task.sh "/status"
+scripts/sagent-task.sh "/sagent status"
+```
+
+Output is also written as structured JSON to `~/.openclaw/workspace/status/last-status-summary.json`.
+
+See `docs/STATUS.md` for details.
+
+### OpenClaw Healthcheck
+
+The healthcheck script `scripts/sagent-healthcheck.sh` tests whether OpenClaw is installed, configured with an active model, and able to respond to a ping message.
+
 Available via:
 
 ```sh

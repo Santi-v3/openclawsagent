@@ -97,6 +97,27 @@ scripts/sagent-task.sh "/code <task>"
 
 These route to `scripts/sagent-opencode-worker.sh` and do not call OpenClaw.
 
+## Status Command
+
+Show the central Sagent runtime status:
+
+```sh
+scripts/sagent-task.sh "/status"
+scripts/sagent-task.sh "/sagent status"
+```
+
+Both route to `scripts/sagent-status.sh`. The status command reads data from all runtime subsystems and displays:
+
+- Security Mode
+- Auto-Code routing state
+- ntfy notification status
+- OpenClaw health status and active model
+- Pending approval (if any)
+- Last risk level and exit code
+- Last OpenCode worker run
+
+Output is written to `~/.openclaw/workspace/status/last-status-summary.json`. See `docs/STATUS.md` for details.
+
 ## Healthcheck Commands
 
 Run the OpenClaw healthcheck:
