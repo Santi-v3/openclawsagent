@@ -13,3 +13,23 @@ config/providers.local.json
 node_modules/
 dist/
 build/
+
+# Sagent runtime / generated data
+runtime/
+logs/
+tmp/
+*.log
+*.pid
+*.db
+*.sqlite
+*.sqlite3
+
+# OpenClaw local runtime
+.openclaw/
+workspace/
+
+# credentials and keys
+*.pem
+*.key
+secrets/
+credentials/
