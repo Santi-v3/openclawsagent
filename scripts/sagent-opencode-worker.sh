@@ -89,7 +89,30 @@ if ! command -v opencode >/dev/null 2>&1; then
   exit 1
 fi
 
-SAFETY_PREFIX="Du bist der Sagent OpenCode Worker. Arbeite nur im aktuellen Projektordner. Lies keine Secrets. Keine .env, keine SSH Keys, keine Tokens. Kein git push, kein deploy, keine externen Aktionen. Wenn nicht ausdrücklich nach Änderungen gefragt wird, ändere keine Dateien. Fasse Ergebnis und Risiken kurz zusammen."
+EXTERNAL_READ_PATHS="${SAGENT_OPENCODE_READ_PATHS:-}"
+
+SAFETY_PREFIX="Du bist der Sagent OpenCode Worker.
+
+Schreibzugriff:
+- Arbeite und ändere Dateien ausschließlich im aktuellen Projektordner.
+- Keine Änderungen außerhalb des aktuellen Projektordners.
+
+Lesezugriff:
+- Du darfst Dateien im aktuellen Projektordner lesen.
+- Zusätzlich darfst du ausschließlich die folgenden externen Pfade lesend verwenden:
+${EXTERNAL_READ_PATHS:-keine}
+- Außerhalb dieser Pfade darfst du nichts lesen.
+
+Sicherheit:
+- Lies keine Secrets.
+- Keine .env-Dateien.
+- Keine SSH-Keys.
+- Keine Tokens oder API-Keys ausgeben.
+- Kein git push.
+- Kein Deploy.
+- Keine externen oder kostenpflichtigen Aktionen.
+- Wenn nicht ausdrücklich nach Änderungen gefragt wird, ändere keine Dateien.
+- Fasse Ergebnis und Risiken kurz zusammen."
 MESSAGE="$SAFETY_PREFIX
 
 Task:

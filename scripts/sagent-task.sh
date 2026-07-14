@@ -18,8 +18,9 @@ APPROVALS="$WORKSPACE/approvals"
 APPROVAL_HISTORY="$APPROVALS/history"
 SECURITY_MODE_FILE="$SETTINGS_DIR/security-mode.txt"
 AUTO_CODE_FILE="$SETTINGS_DIR/auto-code-routing.txt"
+CALLS_DIR="$WORKSPACE/calls"
 
-mkdir -p "$INBOX" "$RUNS" "$HISTORY" "$SETTINGS_DIR" "$APPROVALS" "$APPROVAL_HISTORY"
+mkdir -p "$INBOX" "$RUNS" "$HISTORY" "$SETTINGS_DIR" "$APPROVALS" "$APPROVAL_HISTORY" "$CALLS_DIR"
 
 TIMESTAMP="$(date +"%Y%m%d-%H%M%S")"
 SESSION_KEY="sagent-bridge-$TIMESTAMP"
@@ -108,6 +109,15 @@ classify_risk() {
       RISK_REASON="external effect, deletion, installation, publishing, or account/payment action"
       return
       ;;
+    *"voicecall"*|*"voice call"*|*"anruf"*|*"anrufen"*|*"telefon"*|*"tel:"*|*"twilio"*)
+      if [[ "$task_lower" == *"mock"* || "$task_lower" == *"setup"* || "$task_lower" == *"check"* || "$task_lower" == *"status"* || "$task_lower" == *"last"* || "$task_lower" == *"transcript"* || "$task_lower" == *"summarize"* ]]; then
+        : # mock, setup, check, status are safe local operations - fall through to lower risk levels
+      else
+        RISK_LEVEL=4
+        RISK_REASON="real outgoing voice call detected"
+        return
+      fi
+      ;;
   esac
 
   case "$task_lower" in
@@ -186,10 +196,76 @@ STATUS_EOF
   cp "$STATUS_FILE" "$HISTORY_STATUS_FILE"
 }
 
+is_voice_call_task() {
+  local task_lower
+  task_lower="$(printf '%s' "$TASK" | tr '[:upper:]' '[:lower:]')"
+  case "$task_lower" in
+    "/call +"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+route_call_command() {
+  local rest="${TASK#/call }"
+  rest="${rest## }"
+
+  local subcmd="${rest%% *}"
+
+  case "$subcmd" in
+    setup|check|gemini-check|status|last|transcript|summarize|help)
+      run_internal_command "scripts/sagent-call.sh" "$SCRIPT_DIR/sagent-call.sh" "$subcmd"
+      return
+      ;;
+  esac
+
+  local -a args
+  args=("$subcmd")
+
+  local rest_args="${rest#$subcmd}"
+  rest_args="${rest_args## }"
+
+  set -f
+  local -a words
+  if [ -n "$rest_args" ]; then
+    read -ra words <<< "$rest_args"
+  fi
+
+  local i=0
+  while [ $i -lt "${#words[@]}" ]; do
+    if [ "${words[$i]}" = "--goal" ]; then
+      args+=("--goal")
+      i=$((i + 1))
+      local -a goal_parts
+      while [ $i -lt "${#words[@]}" ]; do
+        goal_parts+=("${words[$i]}")
+        i=$((i + 1))
+      done
+      local IFS=' '
+      args+=("${goal_parts[*]}")
+      unset IFS
+    else
+      args+=("${words[$i]}")
+      i=$((i + 1))
+    fi
+  done
+  set +f
+
+  if [[ "$subcmd" =~ ^\+[0-9] ]]; then
+    args=("request" "${args[@]}")
+  fi
+
+  run_internal_command "scripts/sagent-call.sh" "$SCRIPT_DIR/sagent-call.sh" "${args[@]}"
+}
+
 write_pending_approval() {
   local escaped_task escaped_reason
   escaped_task="$(json_escape "$TASK")"
   escaped_reason="$(json_escape "$RISK_REASON")"
+
+  local action_type="execute_task"
+  if is_voice_call_task; then
+    action_type="voice_call"
+  fi
 
   cat > "$PENDING_FILE" <<PENDING_EOF
 {
@@ -200,6 +276,7 @@ write_pending_approval() {
   "risk_level": $RISK_LEVEL,
   "risk_reason": "$escaped_reason",
   "requested_action": "execute_task",
+  "action_type": "$action_type",
   "status": "pending"
 }
 PENDING_EOF
@@ -305,6 +382,15 @@ Sagent commands:
   /sagent status
   /health
   /openclaw health
+  /call setup
+  /call check
+  /call gemini-check
+  /call status
+  /call last
+  /call transcript
+  /call summarize
+  /call mock <number> --language <code> --goal <text>
+  /call <number> --language <code> --goal <text>
 
 Normal tasks without / are sent to OpenClaw.
 When auto-code routing is enabled, coding tasks are automatically routed to the OpenCode worker.
@@ -362,6 +448,9 @@ handle_internal_command() {
       ;;
     "/health"|"/openclaw health")
       run_internal_command "scripts/sagent-healthcheck.sh" "$SCRIPT_DIR/sagent-healthcheck.sh"
+      ;;
+    "/call "*)
+      route_call_command
       ;;
     /*)
       echo "Unknown Sagent command: $TASK"

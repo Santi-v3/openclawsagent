@@ -1,0 +1,43 @@
+{
+  // Sagent Voice Call – Gemini Live Provider (example config)
+  // Kopiere diese Datei nach config/voice-call-gemini-live.json
+  // und setze den API-Key über die Umgebungsvariable GEMINI_API_KEY.
+  // Der Key wird NIEMALS in dieser Datei gespeichert.
+
+  provider: "gemini-live",
+
+  // Umgebungsvariable für den Gemini API Key
+  apiKeyEnv: "GEMINI_API_KEY",
+
+  // Standard-Modell für Live-Anrufe
+  model: "gemini-2.5-flash",
+
+  // Spracheinstellungen (ISO 639-1)
+  language: "de",
+
+  // Stimm-Einstellungen (sofern vom Provider unterstützt)
+  voice: {
+    // Stimme: "default" | "female" | "male"
+    gender: "female",
+    // Geschwindigkeit: 0.5 – 2.0
+    speed: 1.0,
+  },
+
+  // Anruf-Konfiguration
+  call: {
+    // Timeout pro Anruf (in Sekunden)
+    timeoutSeconds: 120,
+    // Maximale Gesprächsdauer (in Sekunden)
+    maxDurationSeconds: 600,
+    // Transkription aktivieren
+    transcription: true,
+  },
+
+  // Sicherheit
+  safety: {
+    // NIEMALS auf true setzen – nur für Mock-Tests
+    allowRealCalls: false,
+    // Erfordert manuelle Freigabe vor echtem Anruf
+    requireApproval: true,
+  },
+}

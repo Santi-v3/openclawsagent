@@ -8,6 +8,7 @@ RUNS="$WORKSPACE/runs"
 APPROVALS="$WORKSPACE/approvals"
 OPENCODE_DIR="$WORKSPACE/opencode"
 STATUS_DIR="$WORKSPACE/status"
+CALLS_DIR="$WORKSPACE/calls"
 PENDING_FILE="$APPROVALS/pending.json"
 
 SECURITY_MODE_FILE="$SETTINGS_DIR/security-mode.txt"
@@ -199,6 +200,49 @@ if [ -n "$LAST_WORKER_MODEL" ]; then
   echo "   Timestamp:  $LAST_WORKER_TIMESTAMP"
 fi
 
+# --- Voice Call Status ---
+
+CALL_PENDING_COUNT=0
+CALL_ACTIVE_COUNT=0
+CALL_HISTORY_COUNT=0
+CALL_LAST_STATUS="none"
+
+if [ -d "$CALLS_DIR/pending" ]; then
+  CALL_PENDING_COUNT="$(find "$CALLS_DIR/pending" -name 'pending-*.json' 2>/dev/null | wc -l | tr -d ' ')"
+fi
+if [ -d "$CALLS_DIR/active" ]; then
+  CALL_ACTIVE_COUNT="$(find "$CALLS_DIR/active" -name '*.json' 2>/dev/null | wc -l | tr -d ' ')"
+fi
+if [ -d "$CALLS_DIR/history" ]; then
+  CALL_HISTORY_COUNT="$(find "$CALLS_DIR/history" -name '*.json' 2>/dev/null | wc -l | tr -d ' ')"
+fi
+if [ -f "$CALLS_DIR/last-call.json" ]; then
+  CALL_LAST_STATUS="$(json_string_field "status" "$CALLS_DIR/last-call.json")"
+fi
+
+echo ""
+echo " Voice Calls:"
+echo "   Pending:  $CALL_PENDING_COUNT"
+echo "   Active:   $CALL_ACTIVE_COUNT"
+echo "   History:  $CALL_HISTORY_COUNT"
+echo "   Last:     $CALL_LAST_STATUS"
+
+# --- Gemini check ---
+
+GEMINI_CREDENTIALS="not configured"
+
+if [ -n "${GEMINI_API_KEY:-}" ] || [ -n "${GOOGLE_API_KEY:-}" ]; then
+  GEMINI_CREDENTIALS="configured via environment"
+else
+  gc_file="$HOME/.openclaw/agents/main/agent/plugins/google/catalog.json"
+  if [ -f "$gc_file" ] && jq -e '.providers.google.apiKey | length > 0' "$gc_file" >/dev/null 2>&1; then
+    GEMINI_CREDENTIALS="configured in OpenClaw catalog"
+  fi
+fi
+
+echo ""
+echo " Gemini Credentials:  $GEMINI_CREDENTIALS"
+
 # --- Write summary JSON ---
 
 es_sec="$(json_escape "$SECURITY_MODE")"
@@ -222,7 +266,12 @@ cat > "$SUMMARY_FILE" <<SUMMARY_EOF
   "pending_approval": "$es_pend",
   "last_risk_level": $LAST_RISK_LEVEL,
   "last_exit_code": $LAST_EXIT_CODE,
-  "last_worker": "$es_last_worker"
+  "last_worker": "$es_last_worker",
+  "voice_calls": {
+    "pending": $CALL_PENDING_COUNT,
+    "active": $CALL_ACTIVE_COUNT,
+    "history": $CALL_HISTORY_COUNT
+  }
 }
 SUMMARY_EOF
 
