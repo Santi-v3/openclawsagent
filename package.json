@@ -6,7 +6,9 @@
   "scripts": {
     "demo:providers": "tsx src/demo/provider-selection-demo.ts",
     "demo:load-config": "tsx src/demo/load-provider-config-demo.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:google-live": "tsx scripts/test-google-live-provider.ts",
+    "test:google-live:network": "GOOGLE_LIVE_NETWORK_TEST=1 tsx scripts/test-google-live-provider.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
