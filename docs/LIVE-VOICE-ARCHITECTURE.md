@@ -10,10 +10,11 @@ telephony through a provider abstraction layer.
 ```
 voice/
 ├── provider/
-│   ├── provider-interface.ts   — VoiceProvider interface + shared types
-│   ├── mock.ts                 — Mock provider (no real calls)
-│   ├── google-live.ts          — Google Live API placeholder
-│   └── twilio.ts               — Twilio telephony placeholder
+│   ├── provider-interface.ts      — VoiceProvider interface + shared types
+│   ├── mock.ts                    — Mock provider (no real calls)
+│   ├── google-live.ts             — Google Live API provider (implementation)
+│   ├── google-live-config.ts      — Google Live typed configuration schema
+│   └── twilio.ts                  — Twilio telephony placeholder
 ├── session/
 │   └── voice-session.ts        — Session lifecycle management
 ├── pipeline/
@@ -59,7 +60,7 @@ JSON Output
 | Phone calls      | no   | no          | yes    |
 | Audio format     | pcm16| opus        | mulaw  |
 | API key needed   | no   | yes         | yes    |
-| Implementation   | full | placeholder | placeholder |
+| Implementation   | full | full        | placeholder |
 
 ## Session States
 

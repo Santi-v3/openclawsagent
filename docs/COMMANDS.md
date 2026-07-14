@@ -129,6 +129,55 @@ scripts/sagent-task.sh "/openclaw health"
 
 Both route to `scripts/sagent-healthcheck.sh`. The healthcheck tests the `openclaw` binary, the active model, and runs a ping test. Logs are written to `~/.openclaw/workspace/health/`. See `docs/HEALTHCHECK.md` for details.
 
+## Voice Call Commands
+
+The voice call system provides safe, local call simulation and request management. No real calls are made without explicit manual approval.
+
+### Setup, Check and Gemini-Check
+
+```sh
+scripts/sagent-task.sh "/call setup"
+scripts/sagent-task.sh "/call check"
+scripts/sagent-task.sh "/call gemini-check"
+```
+
+`setup` runs only safe workspace checks. `check` runs `openclaw voicecall setup --json` to verify the plugin. `gemini-check` checks Gemini Live voice provider readiness including config files, credentials, and plugin status.
+
+### Mock Call
+
+```sh
+scripts/sagent-task.sh "/call mock +491234567890 --language de --goal \"Termin bestätigen\""
+```
+
+Simulates a call using the mock provider only. Never makes a real call. Produces simulated transcript and summary.
+
+### Pending Call Request
+
+```sh
+scripts/sagent-task.sh "/call +491234567890 --language de --goal \"Termin bestätigen\""
+```
+
+Creates a pending call job under `~/.openclaw/workspace/calls/pending/`. No real call is started. Manual approval is required before execution.
+
+### Status, Last, Transcript, Summarize
+
+```sh
+scripts/sagent-task.sh "/call status"
+scripts/sagent-task.sh "/call last"
+scripts/sagent-task.sh "/call transcript"
+scripts/sagent-task.sh "/call summarize"
+```
+
+All four commands read only local call data and never make external calls.
+
+### Security
+
+- `call setup`, `call check`, `call gemini-check`, `call status`, `call last`, `call transcript`, `call summarize` run directly without approval.
+- `call mock` runs directly but is guaranteed to use only the mock provider.
+- `call <number> ...` creates a pending call request (no real call).
+
+Real outgoing calls are classified as Risk Level 4 in the Sagent approval flow. Mock, status, and transcript operations are not treated as external actions.
+
 ## Help
 
 ```sh
