@@ -3,19 +3,27 @@
   "permission": {
     "external_directory": {
       "/Users/santi/.openclaw/workspace": "allow",
-      "/Users/santi/.openclaw/workspace/**": "allow"
+      "/Users/santi/.openclaw/workspace/**": "allow",
+      "/opt/homebrew/lib/node_modules/openclaw/**": "allow",
+      "$HOME/.openclaw/npm/projects/**": "allow"
     },
     "read": {
       "**/.env": "deny",
       "**/.env.*": "deny",
       "**/*.pem": "deny",
-      "**/*.key": "deny"
+      "**/*.key": "deny",
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
     },
     "edit": {
       "**/.env": "deny",
       "**/.env.*": "deny",
       "**/*.pem": "deny",
-      "**/*.key": "deny"
+      "**/*.key": "deny",
+      "/opt/homebrew/lib/node_modules/openclaw/**": "deny",
+      "$HOME/.openclaw/npm/projects/**": "deny"
     }
   }
 }
