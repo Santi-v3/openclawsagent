@@ -53,6 +53,7 @@ Commands:
   setup                           Run safe setup checks.
   check                           Check voice call system status.
   gemini-check                    Check Gemini Live voice provider readiness.
+  twilio-check                    Check Twilio telephony provider readiness.
   mock <number> --language <code> --goal <text>   Simulate a mock call.
   request <number> --language <code> --goal <text> Create a pending call request.
   execute-pending                 Execute a pending call (via approval system only).
@@ -70,9 +71,10 @@ Mock mode: Uses the mock provider only. No real calls are made.
 Request mode: Creates a pending job only. No real calls are started.
 
 Configuration files in config/:
-  voice-call-mock.example.json5          Mock provider example config
-  voice-call-gemini-live.example.json5   Gemini Live example config
-  voice-call-system-prompt.txt           System prompt for voice calls
+  voice-call-mock.example.json5                 Mock provider example config
+  voice-call-gemini-live.example.json5          Gemini Live example config
+  voice-call-twilio-gemini.example.json5        Twilio + Gemini Live example config
+  voice-call-system-prompt.txt                  System prompt for voice calls
 HELP_EOF
 }
 
@@ -107,6 +109,11 @@ cmd_setup() {
   local gemini_example="$SCRIPT_DIR/../config/voice-call-gemini-live.example.json5"
   if [ -f "$gemini_example" ]; then
     echo "  gemini example config: $gemini_example"
+  fi
+
+  local twilio_example="$SCRIPT_DIR/../config/voice-call-twilio-gemini.example.json5"
+  if [ -f "$twilio_example" ]; then
+    echo "  twilio example config: $twilio_example"
   fi
 
   local system_prompt="$SCRIPT_DIR/../config/voice-call-system-prompt.txt"
@@ -252,6 +259,80 @@ cmd_gemini_check() {
 
   echo ""
   echo "Gemini Live check complete."
+  echo "Provider remains: mock (no changes made)"
+}
+
+cmd_twilio_check() {
+  echo "Twilio Provider Check"
+  echo "====================="
+  echo ""
+
+  local has_sid=false
+  local has_token=false
+  local has_from=false
+
+  if [ -n "${TWILIO_ACCOUNT_SID:-}" ]; then
+    has_sid=true
+  fi
+  if [ -n "${TWILIO_AUTH_TOKEN:-}" ]; then
+    has_token=true
+  fi
+  if [ -n "${TWILIO_FROM_NUMBER:-}" ]; then
+    has_from=true
+  fi
+
+  local sid_status="not configured"
+  local token_status="not configured"
+  local from_status="not configured"
+
+  $has_sid   && sid_status="configured"
+  $has_token && token_status="configured"
+  $has_from  && from_status="configured"
+
+  echo "  Twilio Credentials:"
+  echo "    Account SID:       $sid_status"
+  echo "    Auth Token:        $token_status"
+  echo "    From Number:       $from_status"
+  echo ""
+
+  local all_configured=false
+  $has_sid && $has_token && $has_from && all_configured=true
+
+  echo "  Credentials:       $($all_configured && echo "configured" || echo "not configured")"
+
+  local has_webhook=false
+  if [ -n "${TWILIO_PUBLIC_URL:-}" ]; then
+    has_webhook=true
+  fi
+  echo "  Webhook:           $($has_webhook && echo "configured" || echo "not configured")"
+
+  local has_voice_plugin=false
+  if command -v openclaw &>/dev/null; then
+    local plugin_check
+    plugin_check="$(openclaw voicecall setup --json 2>/dev/null || true)"
+    if echo "$plugin_check" | grep -q '"ok": true'; then
+      has_voice_plugin=true
+    fi
+  fi
+  echo "  Voice Plugin:      $($has_voice_plugin && echo "installed" || echo "not installed")"
+
+  local google_configured=false
+  if [ -n "${GEMINI_API_KEY:-}" ] || [ -n "${GOOGLE_API_KEY:-}" ]; then
+    google_configured=true
+  fi
+  echo "  Google Realtime:   $($google_configured && echo "registered" || echo "not registered")"
+
+  local live_config_file="$SCRIPT_DIR/../config/voice-call-twilio-gemini.json"
+  local live_config_prepared=false
+  [ -f "$live_config_file" ] && live_config_prepared=true
+  echo "  Live Config:       $($live_config_prepared && echo "prepared" || echo "not prepared")"
+
+  echo "  Real Call Test:    not performed"
+  echo ""
+  echo "  No real call has been made."
+  echo "  No credentials have been displayed."
+  echo ""
+  echo "Twilio check complete."
   echo "Provider remains: mock (no changes made)"
 }
 
@@ -797,6 +878,9 @@ case "$COMMAND" in
     ;;
   gemini-check)
     cmd_gemini_check
+    ;;
+  twilio-check)
+    cmd_twilio_check
     ;;
   mock)
     cmd_mock "$@"

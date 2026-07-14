@@ -8,7 +8,9 @@
     "demo:load-config": "tsx src/demo/load-provider-config-demo.ts",
     "typecheck": "tsc --noEmit",
     "test:google-live": "tsx scripts/test-google-live-provider.ts",
-    "test:google-live:network": "GOOGLE_LIVE_NETWORK_TEST=1 tsx scripts/test-google-live-provider.ts"
+    "test:google-live:network": "GOOGLE_LIVE_NETWORK_TEST=1 tsx scripts/test-google-live-provider.ts",
+    "test:twilio": "tsx scripts/test-twilio-provider.ts",
+    "test:twilio:network": "TWILIO_NETWORK_TEST=1 tsx scripts/test-twilio-provider.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

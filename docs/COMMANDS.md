@@ -133,15 +133,16 @@ Both route to `scripts/sagent-healthcheck.sh`. The healthcheck tests the `opencl
 
 The voice call system provides safe, local call simulation and request management. No real calls are made without explicit manual approval.
 
-### Setup, Check and Gemini-Check
+### Setup, Check, Gemini-Check and Twilio-Check
 
 ```sh
 scripts/sagent-task.sh "/call setup"
 scripts/sagent-task.sh "/call check"
 scripts/sagent-task.sh "/call gemini-check"
+scripts/sagent-task.sh "/call twilio-check"
 ```
 
-`setup` runs only safe workspace checks. `check` runs `openclaw voicecall setup --json` to verify the plugin. `gemini-check` checks Gemini Live voice provider readiness including config files, credentials, and plugin status.
+`setup` runs only safe workspace checks. `check` runs `openclaw voicecall setup --json` to verify the plugin. `gemini-check` checks Gemini Live voice provider readiness including config files, credentials, and plugin status. `twilio-check` checks Twilio telephony provider readiness including credentials, webhook, plugin, and Google Realtime provider status.
 
 ### Mock Call
 
@@ -172,7 +173,7 @@ All four commands read only local call data and never make external calls.
 
 ### Security
 
-- `call setup`, `call check`, `call gemini-check`, `call status`, `call last`, `call transcript`, `call summarize` run directly without approval.
+- `call setup`, `call check`, `call gemini-check`, `call twilio-check`, `call status`, `call last`, `call transcript`, `call summarize` run directly without approval.
 - `call mock` runs directly but is guaranteed to use only the mock provider.
 - `call <number> ...` creates a pending call request (no real call).
 

@@ -14,7 +14,8 @@ voice/
 │   ├── mock.ts                    — Mock provider (no real calls)
 │   ├── google-live.ts             — Google Live API provider (implementation)
 │   ├── google-live-config.ts      — Google Live typed configuration schema
-│   └── twilio.ts                  — Twilio telephony placeholder
+│   ├── twilio.ts                  — Twilio telephony provider (full implementation)
+│   └── twilio-config.ts           — Twilio typed configuration schema
 ├── session/
 │   └── voice-session.ts        — Session lifecycle management
 ├── pipeline/
@@ -60,7 +61,7 @@ JSON Output
 | Phone calls      | no   | no          | yes    |
 | Audio format     | pcm16| opus        | mulaw  |
 | API key needed   | no   | yes         | yes    |
-| Implementation   | full | full        | placeholder |
+| Implementation   | full | full        | full   |
 
 ## Session States
 
@@ -73,7 +74,7 @@ idle → connecting → connected → disconnected
 ## Future Extensions
 
 - Real Google Live API integration (WebRTC, streaming recognition)
-- Twilio Voice SDK + Media Streams integration
+- Real Twilio Voice SDK + Media Streams call initiation
 - TTS output via provider
 - Multi-provider routing and fallback
 - Persistent session storage
