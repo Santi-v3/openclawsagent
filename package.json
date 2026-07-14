@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "demo:providers": "tsx src/demo/provider-selection-demo.ts",
-    "demo:load-config": "tsx src/demo/load-provider-config-demo.ts"
+    "demo:load-config": "tsx src/demo/load-provider-config-demo.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "tsx": "^4.20.0",
     "typescript": "^5.8.0"
   }
