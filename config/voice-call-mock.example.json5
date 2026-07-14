@@ -1,0 +1,35 @@
+{
+  // Sagent Voice Call – Mock Provider (example config)
+  // Kopiere diese Datei nach config/voice-call-mock.json
+  // und passe bei Bedarf die Simulationsparameter an.
+  // Der Mock-Provider führt NIE echte Anrufe durch.
+
+  provider: "mock",
+
+  // Simulations-Einstellungen
+  simulation: {
+    // Simulierte Gesprächsdauer in Sekunden
+    durationSeconds: 42,
+    // Verzögerung vor Simulationsstart (Sekunden)
+    connectDelaySeconds: 0.5,
+    // Sprachausgabe simulieren (true = Text-to-Speech wird umgangen)
+    skipTts: true,
+  },
+
+  // Spracheinstellungen (ISO 639-1)
+  language: "de",
+
+  // Anruf-Konfiguration
+  call: {
+    timeoutSeconds: 30,
+    maxDurationSeconds: 60,
+    transcription: true,
+  },
+
+  // Sicherheit
+  safety: {
+    // Mock ist immer sicher – erzeugt nie echte Anrufe
+    allowRealCalls: false,
+    requireApproval: false,
+  },
+}

@@ -3,6 +3,8 @@ set -euo pipefail
 
 COMMAND="${1:-help}"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 WORKSPACE="$HOME/.openclaw/workspace"
 RUNS="$WORKSPACE/runs"
 RUN_HISTORY="$RUNS/history"
@@ -223,9 +225,35 @@ approve_pending() {
     return 20
   fi
 
+  local action_type
+  action_type="$(json_string_field "action_type" "$PENDING_FILE")"
+
   cp "$PENDING_FILE" "$approved_json"
   printf '%s\n' "$task" > "$approved_task"
   rm -f "$PENDING_FILE" "$PENDING_TASK_FILE"
+
+  if [ "$action_type" = "voice_call" ]; then
+    echo "Pending approval approved (voice call)."
+    echo "Starting execute-pending via approval system..."
+
+    set +e
+    SAGENT_EXECUTE_PENDING=1 \
+      "$SCRIPT_DIR/sagent-call.sh" execute-pending 2>&1 | tee "$OUTPUT_FILE"
+    local call_exit=${PIPESTATUS[0]}
+    set -e
+
+    cp "$OUTPUT_FILE" "$HISTORY_FILE"
+    write_risk_file "$task" "$call_exit"
+    write_status_file "$call_exit"
+
+    echo ""
+    echo "Saved output to: $OUTPUT_FILE"
+    echo "Saved history to: $HISTORY_FILE"
+    echo "Saved status to: $STATUS_FILE"
+    echo "Saved risk to: $RISK_FILE"
+
+    return "$call_exit"
+  fi
 
   echo "Pending approval approved."
   echo "Running OpenClaw..."
