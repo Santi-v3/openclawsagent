@@ -1,0 +1,66 @@
+{
+  // Sagent Voice Call – Twilio Telefonie + Gemini Live Sprach-Engine (example)
+  // Kopiere diese Datei nach config/voice-call-twilio-gemini.json
+  // Credentials werden AUSSCHLIESSLICH ueber Umgebungsvariablen gesetzt.
+  // KEINE echten Werte in dieser Datei speichern.
+
+  provider: "twilio",
+
+  // Twilio Credentials (nur Umgebungsvariablen – niemals in dieser Datei)
+  // TWILIO_ACCOUNT_SID   – Twilio Account SID
+  // TWILIO_AUTH_TOKEN    – Twilio Auth Token
+  // TWILIO_FROM_NUMBER   – E.164-Absendernummer (z.B. +15551234567)
+
+  // Session-Verwaltung
+  sessionScope: "per-call",
+
+  // Ausgehende Anrufe
+  outbound: {
+    defaultMode: "conversation",
+  },
+
+  // Zeitlimits
+  maxDurationSeconds: 300,
+  maxConcurrentCalls: 1,
+  ringTimeoutMs: 30000,
+
+  // Webhook-Server (lokal)
+  serve: {
+    port: 3334,
+    bind: "127.0.0.1",
+    path: "/voice/webhook",
+  },
+
+  // Tunnel für öffentliche Erreichbarkeit (auskommentiert = Platzhalter)
+  // Tunnel-Optionen: ngrok, tailscale-serve, tailscale-funnel
+  // tunnel: {
+  //   provider: "ngrok",
+  //   // ngrokAuthToken: "<optional-fuer-laengere-sessions>"
+  // },
+
+  // Öffentliche Webhook-URL (alternativ zu Tunnel)
+  // publicUrl: "https://<deine-domain>/voice/webhook"
+
+  // Google Gemini Live als Realtime-Sprach-Engine
+  realtime: {
+    enabled: true,
+    provider: "google",
+  },
+
+  // Streaming-Transkription (deaktiviert – Realtime ist aktiv)
+  streaming: {
+    enabled: false,
+  },
+
+  // Sicherheit: NIEMALS auf true setzen (ausser Test)
+  // skipSignatureVerification: false,
+
+  // Richtlinien
+  toolPolicy: "safe-read-only",
+  consultPolicy: "substantive",
+
+  // Agent-Kontext
+  agentContext: {
+    enabled: true,
+  },
+}

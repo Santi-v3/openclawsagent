@@ -3,6 +3,7 @@ import type { VoiceSession } from "../session/voice-session";
 import type { TranscriptResult } from "../transcript/transcript";
 import type { SummaryResult } from "../summary/summary";
 import { GoogleLiveProvider } from "../provider/google-live";
+import { TwilioProvider } from "../provider/twilio";
 
 export type ProviderKind = "mock" | "google-live" | "twilio";
 
@@ -79,6 +80,7 @@ export class VoicePipeline {
 
   private resolveProviderId(provider: VoiceProvider): string {
     if (provider instanceof GoogleLiveProvider) return "google-live";
+    if (provider instanceof TwilioProvider) return "twilio";
     if (provider.supportsPhoneCalls()) return "twilio";
     return "mock";
   }

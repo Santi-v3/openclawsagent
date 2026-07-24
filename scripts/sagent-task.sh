@@ -212,7 +212,7 @@ route_call_command() {
   local subcmd="${rest%% *}"
 
   case "$subcmd" in
-    setup|check|gemini-check|status|last|transcript|summarize|help)
+    setup|check|gemini-check|twilio-check|status|last|transcript|summarize|help)
       run_internal_command "scripts/sagent-call.sh" "$SCRIPT_DIR/sagent-call.sh" "$subcmd"
       return
       ;;
@@ -385,6 +385,7 @@ Sagent commands:
   /call setup
   /call check
   /call gemini-check
+  /call twilio-check
   /call status
   /call last
   /call transcript

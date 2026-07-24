@@ -57,6 +57,22 @@ Checks Gemini Live voice provider readiness:
 
 No changes are made to the provider configuration.
 
+### twilio-check
+
+```sh
+scripts/sagent-call.sh twilio-check
+```
+
+Checks Twilio telephony provider readiness:
+
+- Twilio credentials (Account SID, Auth Token, From Number)
+- Webhook URL configuration
+- Voice call plugin installation
+- Google Realtime provider registration
+- Live config preparation (`voice-call-twilio-gemini.json`)
+
+No credentials are displayed. No real call is made. No configuration is changed.
+
 ### mock
 
 ```sh
@@ -155,19 +171,23 @@ Displays a summary of the last call from either the summary file or call metadat
 
 ```
 config/
-  voice-call-gemini-live.example.json5   Gemini Live provider example config
-  voice-call-mock.example.json5           Mock provider example config
-  voice-call-system-prompt.txt           System prompt for voice calls
+  voice-call-gemini-live.example.json5          Gemini Live provider example config
+  voice-call-mock.example.json5                 Mock provider example config
+  voice-call-twilio-gemini.example.json5        Twilio + Gemini Live example config
+  voice-call-system-prompt.txt                  System prompt for voice calls
 ```
 
-- Copy `voice-call-gemini-live.example.json5` → `voice-call-gemini-live.json` for real call setup.
+- Copy `voice-call-gemini-live.example.json5` → `voice-call-gemini-live.json` for Gemini Live setup.
 - Copy `voice-call-mock.example.json5` → `voice-call-mock.json` for custom mock settings.
+- Copy `voice-call-twilio-gemini.example.json5` → `voice-call-twilio-gemini.json` for Twilio setup.
 - The system prompt is always read from `voice-call-system-prompt.txt`.
 
 ## See Also
 
 - `docs/GEMINI-LIVE-STATUS.md` – Gemini Live provider readiness details
 - `docs/COMMANDS.md` – Full command reference
+- `docs/TWILIO-PROVIDER.md` – Twilio provider details
+- `docs/GOOGLE-LIVE-PROVIDER.md` – Google Live provider details
 
 ## Testing
 
